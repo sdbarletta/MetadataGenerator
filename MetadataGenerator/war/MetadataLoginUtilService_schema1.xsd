@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<xs:schema version="1.0" targetNamespace="http://metadata.salesforce.sdbarletta.com/" xmlns:tns="http://metadata.salesforce.sdbarletta.com/" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+
+  <xs:element name="Exception" type="tns:Exception"/>
+
+  <xs:element name="loginToSalesforce" type="tns:loginToSalesforce"/>
+
+  <xs:element name="loginToSalesforceResponse" type="tns:loginToSalesforceResponse"/>
+
+  <xs:element name="logout" type="tns:logout"/>
+
+  <xs:element name="logoutResponse" type="tns:logoutResponse"/>
+
+  <xs:complexType name="logout">
+    <xs:sequence/>
+  </xs:complexType>
+
+  <xs:complexType name="logoutResponse">
+    <xs:sequence/>
+  </xs:complexType>
+
+  <xs:complexType name="Exception">
+    <xs:sequence>
+      <xs:element name="message" type="xs:string" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="loginToSalesforce">
+    <xs:sequence>
+      <xs:element name="arg0" type="xs:string" minOccurs="0"/>
+      <xs:element name="arg1" type="xs:string" minOccurs="0"/>
+      <xs:element name="arg2" type="xs:string" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="loginToSalesforceResponse">
+    <xs:sequence>
+      <xs:element name="return" type="tns:myConnectorConfig" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="myConnectorConfig">
+    <xs:sequence>
+      <xs:element name="authEndpoint" type="xs:string" minOccurs="0"/>
+      <xs:element name="serviceEndpoint" type="xs:string" minOccurs="0"/>
+      <xs:element name="sessionId" type="xs:string" minOccurs="0"/>
+      <xs:element name="manualLogin" type="xs:boolean"/>
+      <xs:element name="compression" type="xs:boolean"/>
+    </xs:sequence>
+  </xs:complexType>
+</xs:schema>
+

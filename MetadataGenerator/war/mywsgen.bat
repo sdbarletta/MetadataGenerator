@@ -1,0 +1,1 @@
+wsgen -cp "./war/WEB-INF/classes;./war/WEB-INF/lib/metadata_26.jar;./war/WEB-INF/lib/partner_26.jar;./war/WEB-INF/lib/wsc-22.jar" -wsdl -keep -r "./war" -d "./war/WEB-INF/classes" -s "./src"  com.sdbarletta.salesforce.metadata.MetadataWebService

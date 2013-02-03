@@ -45,7 +45,7 @@ public class MetadataWebService {
 		config.setConnectionTimeout(TWO_MINUTES);
 		config.setTraceMessage(true);
 		mdc = new MetadataConnection(config);
-		log.info("*** mdc is "+(mdc == null? "null": "not null"));
+		log.info("*** createMetadataConnection succeeded");
 		return mdc;
 	}
 	
@@ -61,11 +61,25 @@ public class MetadataWebService {
 	@WebMethod
 	public MetadataResult createVisualforcePage(final String sessionId, final String serviceEndpoint,
 												final String uniqueName, final String label, final double apiVersion, final String content) {
-		log.info("*** Entering createVisualforcePage");
-		MetadataResult result = new MetadataResult("createVisualforcePage");
+		MetadataResult result = null;
 		try {
 			MetadataConnection mdc = createMetadataConnection(sessionId, serviceEndpoint);
-			
+			result = createVisualforcePage(mdc, uniqueName, label, apiVersion, content);
+		} catch(Exception e) {
+			result = new MetadataResult("createVisualforcePage "+uniqueName);
+			result.errorMessage = new String[1];
+			result.errorMessage[0] = e.getMessage();
+			log.warning("*** createVisualforcePage failed: "+result.errorMessage[0]);
+		}
+		
+		return result;
+	}
+	
+	private MetadataResult createVisualforcePage(MetadataConnection mdc, final String uniqueName, final String label, final double apiVersion, final String content) {
+		log.info("*** Entering createVisualforcePage");
+		MetadataResult result = new MetadataResult("createVisualforcePage "+uniqueName);
+		
+		try {
 			ApexPage thePage = new ApexPage();
 			thePage.setFullName(uniqueName);
 			thePage.setDescription("Created by the SFMetadataGenerator");
@@ -75,7 +89,6 @@ public class MetadataWebService {
 			
 			AsyncResult[] asyncResults = mdc.create(new ApexPage[]{thePage});
 			if (asyncResults != null && asyncResults.length > 0) {
-			
 				long waitTimeMilliSecs = ONE_SECOND;
 				
 				// After the create() call completes, we must poll the results of the checkStatus()
@@ -89,12 +102,13 @@ public class MetadataWebService {
 				
 				printAsyncResultStatus(asyncResults);
 			}
-			log.info("*** createVisualforcePage created "+uniqueName);
+			
+			log.info("*** createVisualforcePage succeeded for "+uniqueName);
 			result.success = true;
 		} catch(Exception e) {
 			result.errorMessage = new String[1];
 			result.errorMessage[0] = e.getMessage();
-			log.warning("*** createVisualforcePage failed: "+result.errorMessage[0]);
+			log.warning("*** createVisualforcePage failed for "+uniqueName+": "+result.errorMessage[0]);
 		}
 		
 		return result;
@@ -119,21 +133,37 @@ public class MetadataWebService {
 	public MetadataResult[] createVisualforcePages(final String sessionId, final String serviceEndpoint,
 												   final String[] uniqueName, final String[] label, final double apiVersion, final String[] content) {
 		log.info("*** Entering createVisualforcePages");
-		MetadataResult[] result = new MetadataResult[uniqueName.length];
+		MetadataResult[] result = null;
 		MetadataResult currResult = null;
+		MetadataConnection mdc = null;
 		
-		for(int i=0; i < uniqueName.length; i++) {
-			try {
-				currResult = new MetadataResult("createVisualforcePages "+uniqueName[i]);
-				createVisualforcePage(sessionId, serviceEndpoint, uniqueName[i], label[i], apiVersion, content[i]);
-				currResult.success = true;
-				log.info("*** createVisualforcePages created "+uniqueName[i]);
-			} catch(Exception e) {
-				currResult.errorMessage = new String[1];
-				currResult.errorMessage[0] = e.getMessage();
-				log.warning("*** createVisualforcePages failed: "+currResult.errorMessage[0]);
-			} finally {
-				result[i] = currResult;
+		try {
+			mdc = createMetadataConnection(sessionId, serviceEndpoint);
+		} catch(Exception e) {
+			result = new MetadataResult[1];
+			currResult = new MetadataResult("createVisualforcePages");
+			currResult.errorMessage = new String[1];
+			currResult.errorMessage[0] = e.getMessage();
+			result[0] = currResult;		
+			log.warning("*** createVisualforcePage failed: "+currResult.errorMessage[0]);
+		}
+		
+		if(mdc != null) {
+			result = new MetadataResult[uniqueName.length];
+			
+			for(int i=0; i < uniqueName.length; i++) {
+				try {
+					currResult = new MetadataResult("createVisualforcePages "+uniqueName[i]);
+					createVisualforcePage(mdc, uniqueName[i], label[i], apiVersion, content[i]);
+					currResult.success = true;
+					log.info("*** createVisualforcePages succeeded for "+uniqueName[i]);
+				} catch(Exception e) {
+					currResult.errorMessage = new String[1];
+					currResult.errorMessage[0] = e.getMessage();
+					log.warning("*** createVisualforcePages failed for "+uniqueName[i]+": "+currResult.errorMessage[0]);
+				} finally {
+					result[i] = currResult;
+				}
 			}
 		}
 		

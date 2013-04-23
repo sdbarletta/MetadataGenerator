@@ -1,0 +1,61 @@
+/**
+*   Copyright (c) 2012, Exponent Partners. All rights reserved.
+*
+*   Helper class for calling metadata web service methods
+*
+*   @author Sandy Barletta
+*
+**/
+public without sharing class ExpMetadataSoapHelper {
+    public String username {private get; set;}
+    public String password {private get; set;}
+    public Integer timeout {get; set;}
+    public static final String METADATA_SERVICE_ENDPOINT = getMetadataServiceEndpoint(); 
+    
+    private metadataSalesforceSdbarlettaCom2.MetadataWebServicePort ws = new metadataSalesforceSdbarlettaCom2.MetadataWebServicePort();
+    private String sessionId = UserInfo.getSessionId();
+     
+    public ExpMetadataSoapHelper() {}
+    
+    public void createVisualforcePage(String uniqueName, String label, Double apiVersion, String content) {
+        Blob theContent = Blob.valueOf(content);
+        metadataSalesforceSdbarlettaCom2.MetadataResult r =  ws.createVisualforcePage(sessionId, METADATA_SERVICE_ENDPOINT, uniqueName, label, apiVersion, EncodingUtil.base64Encode(theContent));
+        if(!r.success) {
+            throw new ExpSoapException(r.errorMessage[0],null);
+        }
+    }
+    
+    public void createVisualforcePages(String[] uniqueName, String[] label, Double apiVersion, String[] content) {
+        List<String> encodedContent = new List<String>();
+        for(String c: content) {
+            encodedContent.add(EncodingUtil.base64Encode(Blob.valueOf(c)));
+        }
+        metadataSalesforceSdbarlettaCom2.MetadataResult[] rList = ws.createVisualforcePages(sessionId, METADATA_SERVICE_ENDPOINT, uniqueName, label, apiVersion, encodedContent);
+        String errMsg = '';
+        if(rList != null) {
+            for(metadataSalesforceSdbarlettaCom2.MetadataResult r: rList) {
+                if(!r.success) 
+                    errMsg += r.operationName + ' failed. '+r.errorMessage[0]+ExpStringHelper.NEW_LINE;
+            }
+        }
+        if(errMsg.length() > 0)
+            throw new ExpSoapException(errMsg);
+    }
+    
+    public static String getMetadataServiceEndpoint() {
+        return [select ExpMetadataServiceEndpoint__c from User where Id=:UserInfo.getUserId()].ExpMetadataServiceEndpoint__c;
+    }
+    
+    public String ping() {
+        String val = null;
+        
+        try {
+            val = ws.ping();
+        } catch(Exception e) {
+            System.debug('*** ping failed: '+e.getMessage());
+            throw e;
+        }
+        
+        return val;
+    }
+}
